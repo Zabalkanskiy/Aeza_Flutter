@@ -45,5 +45,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Для импорта изображений</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Для съемки изображений</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Для сохранения изображений</string>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>Уведомления об успешном сохранении изображения</string>
 </dict>
 </plist>
