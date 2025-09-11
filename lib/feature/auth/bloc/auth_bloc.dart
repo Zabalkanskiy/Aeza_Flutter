@@ -29,13 +29,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     on<AuthSignUp>((event, emit) async {
       emit(state.copyWith(isLoading: true, errorMessage: null));
-      try {
-        await repository.signUp(event.email, event.password);
-      } on FirebaseAuthException catch (e) {
-        emit(state.copyWith(errorMessage: e.message));
-      } finally {
+     // try {
+      UserCredential userCredential =  await repository.signUp(event.email, event.password);
+      userCredential;
+      //} on FirebaseAuthException catch (e) {
+        //emit(state.copyWith(errorMessage: e.message));
+     // } finally {
         emit(state.copyWith(isLoading: false));
-      }
+     // }
     });
 
     on<AuthSignOut>((event, emit) async {

@@ -36,10 +36,10 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Firebase
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.9.1
-  cloud_firestore: ^4.11.1
-  firebase_storage: ^11.6.1
+  firebase_core: ^4.1.0
+  firebase_auth: ^6.0.2
+  cloud_firestore: ^6.0.1
+  firebase_storage: ^13.0.1
 
   # State management
   flutter_bloc: ^8.1.6
