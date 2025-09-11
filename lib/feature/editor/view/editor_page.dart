@@ -24,7 +24,7 @@ class _EditorPageState extends State<EditorPage> {
   double _thickness = 4;
   bool _isEraser = false;
   final GlobalKey _repaintKey = GlobalKey();
-  Uint8List? _bgBytes;
+  ui.Image? _bgImage;
   final List<_Stroke> _strokes = [];
   _Stroke? _current;
 
@@ -37,7 +37,15 @@ class _EditorPageState extends State<EditorPage> {
     final x = await picker.pickImage(source: ImageSource.gallery);
     if (x == null) return;
     final bytes = await x.readAsBytes();
-    setState(() => _bgBytes = bytes);
+
+    // Декодируем изображение асинхронно
+    ui.decodeImageFromList(bytes, (img) {
+      if (mounted) {
+        setState(() {
+          _bgImage = img;
+        });
+      }
+    });
   }
 
   Future<Uint8List> _renderImageBytes() async {
@@ -123,9 +131,11 @@ class _EditorPageState extends State<EditorPage> {
                   ..strokeWidth = _thickness
                   ..style = PaintingStyle.stroke
                   ..strokeCap = StrokeCap.round
-                  ..blendMode = BlendMode.srcOver;
+                  ..blendMode = BlendMode.srcOver
+                  ..isAntiAlias = true;
                 _current = _Stroke(
-                  Path()..moveTo(d.localPosition.dx, d.localPosition.dy),
+                  Path()..moveTo(d.localPosition.dx, d.localPosition.dy)
+                    ..lineTo(d.localPosition.dx, d.localPosition.dy),
                   paint,
                 );
                 _strokes.add(_current!);
@@ -141,7 +151,7 @@ class _EditorPageState extends State<EditorPage> {
               child: RepaintBoundary(
                 key: _repaintKey,
                 child: CustomPaint(
-                  painter: _CanvasPainter(_strokes, _bgBytes),
+                  painter: _CanvasPainter(_strokes, _bgImage),
                   child: Container(color: Colors.white),
                 ),
               ),
@@ -176,34 +186,40 @@ class _Stroke {
 
 class _CanvasPainter extends CustomPainter {
   final List<_Stroke> strokes;
-  final Uint8List? bgBytes;
-  ui.Image? _bgImage;
-  _CanvasPainter(this.strokes, this.bgBytes);
+  final ui.Image? bgImage;
+
+  _CanvasPainter(this.strokes, this.bgImage);
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (bgBytes != null && _bgImage == null) {
-      ui.decodeImageFromList(bgBytes!, (img) {
-        _bgImage = img;
-      });
-    }
-    if (_bgImage != null) {
+    // Очищаем холст белым цветом
+    canvas.drawColor(Colors.white, BlendMode.srcOver);
+
+    // Рисуем фоновое изображение если оно есть
+    if (bgImage != null) {
       final src = Rect.fromLTWH(
         0,
         0,
-        _bgImage!.width.toDouble(),
-        _bgImage!.height.toDouble(),
+        bgImage!.width.toDouble(),
+        bgImage!.height.toDouble(),
       );
       final dst = Rect.fromLTWH(0, 0, size.width, size.height);
-      canvas.drawImageRect(_bgImage!, src, dst, Paint());
+      canvas.drawImageRect(bgImage!, src, dst, Paint());
     }
+
+    // Рисуем все штрихи
     for (final s in strokes) {
       canvas.drawPath(s.path, s.paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _CanvasPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _CanvasPainter oldDelegate) {
+    // Сравниваем количество штрихов и фоновое изображение
+    // return strokes.length != oldDelegate.strokes.length ||
+    //     bgImage != oldDelegate.bgImage;
+    return true;
+  }
 }
 
 class _Toolbar extends StatelessWidget {
