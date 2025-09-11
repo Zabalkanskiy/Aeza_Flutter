@@ -28,17 +28,11 @@ class _EditorPageState extends State<EditorPage> {
   final List<_Stroke> _strokes = [];
   _Stroke? _current;
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   Future<void> _pickImage() async {
     final x = await picker.pickImage(source: ImageSource.gallery);
     if (x == null) return;
     final bytes = await x.readAsBytes();
 
-    // Декодируем изображение асинхронно
     ui.decodeImageFromList(bytes, (img) {
       if (mounted) {
         setState(() {
@@ -50,7 +44,7 @@ class _EditorPageState extends State<EditorPage> {
 
   Future<Uint8List> _renderImageBytes() async {
     final boundary =
-        _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     final image = await boundary.toImage(pixelRatio: 3);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData!.buffer.asUint8List();
@@ -75,7 +69,6 @@ class _EditorPageState extends State<EditorPage> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Сохранено в галерею')));
 
-    // Upload to Firebase
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final id = const Uuid().v4();
@@ -90,10 +83,10 @@ class _EditorPageState extends State<EditorPage> {
           .collection('images')
           .doc(id)
           .set({
-            'id': id,
-            'url': url,
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+        'id': id,
+        'url': url,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -131,13 +124,13 @@ class _EditorPageState extends State<EditorPage> {
                   ..strokeWidth = _thickness
                   ..style = PaintingStyle.stroke
                   ..strokeCap = StrokeCap.round
-                  ..blendMode = BlendMode.srcOver
                   ..isAntiAlias = true;
-                _current = _Stroke(
-                  Path()..moveTo(d.localPosition.dx, d.localPosition.dy)
-                    ..lineTo(d.localPosition.dx, d.localPosition.dy),
-                  paint,
-                );
+
+                final path = Path()
+                  ..moveTo(d.localPosition.dx, d.localPosition.dy)
+                  ..lineTo(d.localPosition.dx, d.localPosition.dy);
+
+                _current = _Stroke(path, paint);
                 _strokes.add(_current!);
                 setState(() {});
               },
@@ -152,7 +145,7 @@ class _EditorPageState extends State<EditorPage> {
                 key: _repaintKey,
                 child: CustomPaint(
                   painter: _CanvasPainter(_strokes, _bgImage),
-                  child: Container(color: Colors.white),
+                  child: const SizedBox.expand(), // гарантированно растягиваем
                 ),
               ),
             ),
@@ -192,10 +185,8 @@ class _CanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Очищаем холст белым цветом
     canvas.drawColor(Colors.white, BlendMode.srcOver);
 
-    // Рисуем фоновое изображение если оно есть
     if (bgImage != null) {
       final src = Rect.fromLTWH(
         0,
@@ -207,19 +198,13 @@ class _CanvasPainter extends CustomPainter {
       canvas.drawImageRect(bgImage!, src, dst, Paint());
     }
 
-    // Рисуем все штрихи
     for (final s in strokes) {
       canvas.drawPath(s.path, s.paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _CanvasPainter oldDelegate) {
-    // Сравниваем количество штрихов и фоновое изображение
-    // return strokes.length != oldDelegate.strokes.length ||
-    //     bgImage != oldDelegate.bgImage;
-    return true;
-  }
+  bool shouldRepaint(covariant _CanvasPainter oldDelegate) => true;
 }
 
 class _Toolbar extends StatelessWidget {
@@ -268,23 +253,22 @@ class _Toolbar extends StatelessWidget {
                   content: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children:
-                        [
-                              Colors.black,
-                              Colors.white,
-                              Colors.red,
-                              Colors.green,
-                              Colors.blue,
-                              Colors.purple,
-                              Colors.orange,
-                            ]
-                            .map(
-                              (c) => InkWell(
-                                onTap: () => Navigator.pop(context, c),
-                                child: CircleAvatar(backgroundColor: c),
-                              ),
-                            )
-                            .toList(),
+                    children: [
+                      Colors.black,
+                      Colors.white,
+                      Colors.red,
+                      Colors.green,
+                      Colors.blue,
+                      Colors.purple,
+                      Colors.orange,
+                    ]
+                        .map(
+                          (c) => InkWell(
+                        onTap: () => Navigator.pop(context, c),
+                        child: CircleAvatar(backgroundColor: c),
+                      ),
+                    )
+                        .toList(),
                   ),
                 ),
               );
