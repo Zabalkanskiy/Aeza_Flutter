@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -106,67 +107,125 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Редактор'),
-        actions: [
-          IconButton(onPressed: _share, icon: const Icon(Icons.ios_share)),
-          IconButton(onPressed: _save, icon: const Icon(Icons.save)),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onPanStart: (d) {
-                final paint = Paint()
-                  ..color = _isEraser ? Colors.white : _color
-                  ..strokeWidth = _thickness
-                  ..style = PaintingStyle.stroke
-                  ..strokeCap = StrokeCap.round
-                  ..isAntiAlias = true;
+    return Stack(
+      children: [
+        // Общий фон для всего экрана
+        Positioned.fill(
+          child: Stack(
+            children: [
+              // Фоновое изображение
+              Image.asset(
+                'assets/image/background.png',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
 
-                final path = Path()
-                  ..moveTo(d.localPosition.dx, d.localPosition.dy)
-                  ..lineTo(d.localPosition.dx, d.localPosition.dy);
-
-                _current = _Stroke(path, paint);
-                _strokes.add(_current!);
-                setState(() {});
-              },
-              onPanUpdate: (d) {
-                _current?.path.lineTo(d.localPosition.dx, d.localPosition.dy);
-                setState(() {});
-              },
-              onPanEnd: (_) {
-                _current = null;
-              },
-              child: RepaintBoundary(
-                key: _repaintKey,
-                child: CustomPaint(
-                  painter: _CanvasPainter(_strokes, _bgImage),
-                  child: const SizedBox.expand(), // гарантированно растягиваем
+              ),
+              // SVG поверх изображения
+              Positioned.fill(
+                child: SvgPicture.asset(
+                  'assets/icon/ic_background.svg',
+                  fit: BoxFit.cover,
                 ),
               ),
+            ],
+          ),
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent, // Делаем Scaffold прозрачным
+          appBar: AppBar(
+
+           // backgroundColor: Colors.transparent.withOpacity(0.3),
+            backgroundColor: Color(0x10C4C4C4).withOpacity(0.2),
+            elevation: 0, // Убираем тень
+            title: const Text('Редактор', style: TextStyle(color: Color(0xFFEEEEEE)),),
+            leading: IconButton(onPressed: (){Navigator.of(context).pop();}, icon: const Icon(Icons.keyboard_arrow_left, color: Color(0xFFEEEEEE))),
+            actions: [
+              IconButton(onPressed: _share, icon: const Icon(Icons.ios_share, color: Color(0xFFEEEEEE),)),
+              IconButton(onPressed: _save, icon: const Icon(Icons.save, color: Color(0xFFEEEEEE),)),
+            ],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.horizontal(
+                left: Radius.circular(15),
+                right: Radius.circular(15),
+              ),
             ),
+
+
           ),
-          _Toolbar(
-            color: _color,
-            thickness: _thickness,
-            isEraser: _isEraser,
-            onColor: (c) {
-              setState(() => _color = c);
-            },
-            onThickness: (v) {
-              setState(() => _thickness = v);
-            },
-            onEraser: (e) {
-              setState(() => _isEraser = e);
-            },
-            onImport: _pickImage,
+          body: Stack(
+            children: [
+
+              Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    _Toolbar(
+                      color: _color,
+                      thickness: _thickness,
+                      isEraser: _isEraser,
+                      onColor: (c) {
+                        setState(() => _color = c);
+                      },
+                      onThickness: (v) {
+                        setState(() => _thickness = v);
+                      },
+                      onEraser: (e) {
+                        setState(() => _isEraser = e);
+                      },
+                      onImport: _pickImage,
+                    ),
+                    Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        // height: MediaQuery.of(context).size.height * 0.8, // 80% высоты экрана
+                        width: double.infinity, // На всю ширину
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey, width: 1), // Для визуализации границ
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: GestureDetector(
+                          onPanStart: (d) {
+                            final paint = Paint()
+                              ..color = _isEraser ? Colors.white : _color
+                              ..strokeWidth = _thickness
+                              ..style = PaintingStyle.stroke
+                              ..strokeCap = StrokeCap.round
+                              ..isAntiAlias = true;
+
+                            final path = Path()
+                              ..moveTo(d.localPosition.dx, d.localPosition.dy)
+                              ..lineTo(d.localPosition.dx, d.localPosition.dy);
+
+                            _current = _Stroke(path, paint);
+                            _strokes.add(_current!);
+                            setState(() {});
+                          },
+                          onPanUpdate: (d) {
+                            _current?.path.lineTo(d.localPosition.dx, d.localPosition.dy);
+                            setState(() {});
+                          },
+                          onPanEnd: (_) {
+                            _current = null;
+                          },
+                          child: RepaintBoundary(
+                            key: _repaintKey,
+                            child: CustomPaint(
+                              painter: _CanvasPainter(_strokes, _bgImage),
+                              child: const SizedBox.expand(), // гарантированно растягиваем
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -185,7 +244,11 @@ class _CanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawColor(Colors.white, BlendMode.srcOver);
+   // canvas.drawColor(Colors.white, BlendMode.srcOver);
+   //  canvas.drawRect(
+   //    Rect.fromLTWH(0, 0, size.width, size.height),
+   //    Paint()..color = Colors.white,
+   //  );
 
     if (bgImage != null) {
       final src = Rect.fromLTWH(
@@ -228,54 +291,97 @@ class _Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey.shade100,
+      color: Colors.transparent,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          IconButton(onPressed: onImport, icon: const Icon(Icons.image)),
-          IconButton(
-            onPressed: () => onEraser(!isEraser),
-            icon: Icon(isEraser ? Icons.brush : Icons.cleaning_services),
-          ),
-          Expanded(
-            child: Slider(
-              value: thickness,
-              min: 1,
-              max: 24,
-              onChanged: onThickness,
-            ),
-          ),
+          //IconButton(onPressed: onImport, icon: const Icon(Icons.image)),
+          SvgPicture.asset("assets/icon/ic_download.svg"),
+          SizedBox(width: 12,),
+          SvgPicture.asset("assets/icon/ic_image.svg"),
+          SizedBox(width: 12,),
+          SvgPicture.asset("assets/icon/ic_pencil.svg"),
+          SizedBox(width: 12,),
           GestureDetector(
-            onTap: () async {
-              final c = await showDialog<Color?>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  content: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      Colors.black,
-                      Colors.white,
-                      Colors.red,
-                      Colors.green,
-                      Colors.blue,
-                      Colors.purple,
-                      Colors.orange,
-                    ]
-                        .map(
-                          (c) => InkWell(
-                        onTap: () => Navigator.pop(context, c),
-                        child: CircleAvatar(backgroundColor: c),
+              onTap: () => onEraser(!isEraser),
+              child: SvgPicture.asset("assets/icon/ic_lastic.svg")),
+          SizedBox(width: 12,),
+          GestureDetector(
+              onTap: () async {
+                final c = await showDialog<Color?>(
+                  context: context,
+                  builder: (_) =>
+                      AlertDialog(
+                        content: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            Colors.black,
+                            Colors.white,
+                            Colors.red,
+                            Colors.green,
+                            Colors.blue,
+                            Colors.purple,
+                            Colors.orange,
+                          ]
+                              .map(
+                                (c) =>
+                                InkWell(
+                                  onTap: () => Navigator.pop(context, c),
+                                  child: CircleAvatar(backgroundColor: c),
+                                ),
+                          )
+                              .toList(),
+                        ),
                       ),
-                    )
-                        .toList(),
-                  ),
-                ),
-              );
-              if (c != null) onColor(c);
-            },
-            child: CircleAvatar(radius: 12, backgroundColor: color),
-          ),
+                );
+                if (c != null) onColor(c);
+              },
+              child: SvgPicture.asset("assets/icon/ic_palette.svg")),
+          // IconButton(
+          //   onPressed: () => onEraser(!isEraser),
+          //   icon: Icon(isEraser ? Icons.brush : Icons.cleaning_services),
+          // ),
+          // Expanded(
+          //   child: Slider(
+          //     value: thickness,
+          //     min: 1,
+          //     max: 24,
+          //     onChanged: onThickness,
+          //   ),
+          // ),
+          // GestureDetector(
+          //   onTap: () async {
+          //     final c = await showDialog<Color?>(
+          //       context: context,
+          //       builder: (_) => AlertDialog(
+          //         content: Wrap(
+          //           spacing: 8,
+          //           runSpacing: 8,
+          //           children: [
+          //             Colors.black,
+          //             Colors.white,
+          //             Colors.red,
+          //             Colors.green,
+          //             Colors.blue,
+          //             Colors.purple,
+          //             Colors.orange,
+          //           ]
+          //               .map(
+          //                 (c) => InkWell(
+          //               onTap: () => Navigator.pop(context, c),
+          //               child: CircleAvatar(backgroundColor: c),
+          //             ),
+          //           )
+          //               .toList(),
+          //         ),
+          //       ),
+          //     );
+          //     if (c != null) onColor(c);
+          //   },
+          //   child: CircleAvatar(radius: 12, backgroundColor: color),
+          // ),
         ],
       ),
     );
