@@ -120,7 +120,7 @@ class GalleryPage extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
+                            crossAxisCount: 2,
                             crossAxisSpacing: 4,
                             mainAxisSpacing: 4,
                           ),

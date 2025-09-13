@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,8 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:uuid/uuid.dart';
 
 class EditorPage extends StatefulWidget {
@@ -46,21 +47,38 @@ class _EditorPageState extends State<EditorPage> {
 
   Future<Uint8List> _renderImageBytes() async {
     final boundary =
-    _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+        _repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     final image = await boundary.toImage(pixelRatio: 3);
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     return byteData!.buffer.asUint8List();
   }
 
   Future<void> _save() async {
-    final status = await Permission.photosAddOnly.request();
+    PermissionStatus status;
+
+    // Для Android используем Permission.storage
+    if (Platform.isAndroid) {
+      status = await Permission.photos.request();
+      //status = await Permission.storage.request();
+    }
+    // Для iOS используем Permission.photosAddOnly
+    else if (Platform.isIOS) {
+      status = await Permission.photos.request();
+      //status = await Permission.photosAddOnly.request();
+    } else {
+      status = await Permission.photosAddOnly.request();
+    }
     if (!status.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Нет разрешения на сохранение')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Нет разрешения на сохранение')),
+        );
+      }
       return;
     }
     final bytes = await _renderImageBytes();
+
+    // Сохраняем в галерею устройства
     await ImageGallerySaverPlus.saveImage(
       bytes,
       quality: 100,
@@ -71,28 +89,31 @@ class _EditorPageState extends State<EditorPage> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Сохранено в галерею')));
 
+    // Сохраняем в Firebase Realtime Database в base64
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final id = const Uuid().v4();
-      final ref = FirebaseStorage.instance.ref(
-        'users/${user.uid}/images/$id.png',
-      );
-      await ref.putData(bytes, SettableMetadata(contentType: 'image/png'));
-      final url = await ref.getDownloadURL();
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('images')
-          .doc(id)
-          .set({
-        'id': id,
-        'url': url,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Загружено в Firebase')));
+      try {
+        final id = const Uuid().v4();
+        final base64String = base64Encode(bytes);
+
+        final database = FirebaseDatabase.instance.ref('aaaa/image');
+        await database.child(id).set({
+          'id': id,
+          'userId': user.uid,
+          'base64': base64String,
+          'createdAt': DateTime.now().millisecondsSinceEpoch,
+        });
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Загружено в Firebase')));
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка загрузки: $e')));
+      }
     }
   }
 
@@ -120,7 +141,6 @@ class _EditorPageState extends State<EditorPage> {
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
-
               ),
               // SVG поверх изображения
               Positioned.fill(
@@ -135,15 +155,31 @@ class _EditorPageState extends State<EditorPage> {
         Scaffold(
           backgroundColor: Colors.transparent, // Делаем Scaffold прозрачным
           appBar: AppBar(
-
-           // backgroundColor: Colors.transparent.withOpacity(0.3),
+            // backgroundColor: Colors.transparent.withOpacity(0.3),
             backgroundColor: Color(0x10C4C4C4).withOpacity(0.2),
             elevation: 0, // Убираем тень
-            title: const Text('Редактор', style: TextStyle(color: Color(0xFFEEEEEE)),),
-            leading: IconButton(onPressed: (){Navigator.of(context).pop();}, icon: const Icon(Icons.keyboard_arrow_left, color: Color(0xFFEEEEEE))),
+            title: const Text(
+              'Редактор',
+              style: TextStyle(color: Color(0xFFEEEEEE)),
+            ),
+            leading: IconButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(
+                Icons.keyboard_arrow_left,
+                color: Color(0xFFEEEEEE),
+              ),
+            ),
             actions: [
-              IconButton(onPressed: _share, icon: const Icon(Icons.ios_share, color: Color(0xFFEEEEEE),)),
-              IconButton(onPressed: _save, icon: const Icon(Icons.save, color: Color(0xFFEEEEEE),)),
+              IconButton(
+                onPressed: _share,
+                icon: const Icon(Icons.ios_share, color: Color(0xFFEEEEEE)),
+              ),
+              IconButton(
+                onPressed: _save,
+                icon: const Icon(Icons.save, color: Color(0xFFEEEEEE)),
+              ),
             ],
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.horizontal(
@@ -151,12 +187,9 @@ class _EditorPageState extends State<EditorPage> {
                 right: Radius.circular(15),
               ),
             ),
-
-
           ),
           body: Stack(
             children: [
-
               Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
@@ -184,19 +217,26 @@ class _EditorPageState extends State<EditorPage> {
                         width: double.infinity, // На всю ширину
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(color: Colors.grey, width: 1), // Для визуализации границ
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1,
+                          ), // Для визуализации границ
                           borderRadius: BorderRadius.circular(25),
                         ),
                         child: GestureDetector(
                           onPanStart: (d) {
-                            final box = _containerKey.currentContext?.findRenderObject() as RenderBox;
-                            final localPos = box.globalToLocal(d.globalPosition);
+                            final box =
+                                _containerKey.currentContext?.findRenderObject()
+                                    as RenderBox;
+                            final localPos = box.globalToLocal(
+                              d.globalPosition,
+                            );
 
                             if (!box.size.contains(localPos)) {
                               return; // Игнорируем касания вне области контейнера
                             }
 
-                           if (!_isInside(localPos, box.size)) return;
+                            if (!_isInside(localPos, box.size)) return;
                             final paint = Paint()
                               ..color = _isEraser ? Colors.white : _color
                               ..strokeWidth = _thickness
@@ -213,14 +253,21 @@ class _EditorPageState extends State<EditorPage> {
                             setState(() {});
                           },
                           onPanUpdate: (d) {
-                            final renderBox = _containerKey.currentContext?.findRenderObject() as RenderBox;
-                            final localPosition = renderBox.globalToLocal(d.globalPosition);
+                            final renderBox =
+                                _containerKey.currentContext?.findRenderObject()
+                                    as RenderBox;
+                            final localPosition = renderBox.globalToLocal(
+                              d.globalPosition,
+                            );
 
                             if (!renderBox.size.contains(localPosition)) {
                               _current = null;
                               return;
                             }
-                            _current?.path.lineTo(d.localPosition.dx, d.localPosition.dy);
+                            _current?.path.lineTo(
+                              d.localPosition.dx,
+                              d.localPosition.dy,
+                            );
                             setState(() {});
                           },
                           onPanEnd: (_) {
@@ -230,7 +277,8 @@ class _EditorPageState extends State<EditorPage> {
                             key: _repaintKey,
                             child: CustomPaint(
                               painter: _CanvasPainter(_strokes, _bgImage),
-                              child: const SizedBox.expand(), // гарантированно растягиваем
+                              child:
+                                  const SizedBox.expand(), // гарантированно растягиваем
                             ),
                           ),
                         ),
@@ -260,8 +308,6 @@ bool _isInside(Offset pos, Size size) {
       pos.dy <= size.height;
 }
 
-
-
 class _CanvasPainter extends CustomPainter {
   final List<_Stroke> strokes;
   final ui.Image? bgImage;
@@ -270,11 +316,11 @@ class _CanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-   // canvas.drawColor(Colors.white, BlendMode.srcOver);
-   //  canvas.drawRect(
-   //    Rect.fromLTWH(0, 0, size.width, size.height),
-   //    Paint()..color = Colors.white,
-   //  );
+    // canvas.drawColor(Colors.white, BlendMode.srcOver);
+    //  canvas.drawRect(
+    //    Rect.fromLTWH(0, 0, size.width, size.height),
+    //    Paint()..color = Colors.white,
+    //  );
 
     // Обрезаем холст по скругленным углам
     final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
@@ -333,49 +379,91 @@ class _Toolbar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          //IconButton(onPressed: onImport, icon: const Icon(Icons.image)),
-          SvgPicture.asset("assets/icon/ic_download.svg"),
-          SizedBox(width: 12,),
-          SvgPicture.asset("assets/icon/ic_image.svg"),
-          SizedBox(width: 12,),
-          SvgPicture.asset("assets/icon/ic_pencil.svg"),
-          SizedBox(width: 12,),
           GestureDetector(
-              onTap: () => onEraser(!isEraser),
-              child: SvgPicture.asset("assets/icon/ic_lastic.svg")),
-          SizedBox(width: 12,),
+            onTap: onImport,
+            child: SvgPicture.asset("assets/icon/ic_download.svg"),
+          ),
+          SizedBox(width: 12),
           GestureDetector(
-              onTap: () async {
-                final c = await showDialog<Color?>(
-                  context: context,
-                  builder: (_) =>
-                      AlertDialog(
-                        content: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            Colors.black,
-                            Colors.white,
-                            Colors.red,
-                            Colors.green,
-                            Colors.blue,
-                            Colors.purple,
-                            Colors.orange,
-                          ]
-                              .map(
-                                (c) =>
-                                InkWell(
-                                  onTap: () => Navigator.pop(context, c),
-                                  child: CircleAvatar(backgroundColor: c),
-                                ),
-                          )
-                              .toList(),
+            onTap: onImport,
+            child: SvgPicture.asset("assets/icon/ic_image.svg"),
+          ),
+          SizedBox(width: 12),
+          GestureDetector(
+            onTap: () {
+              // Показать диалог для выбора толщины кисти
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Толщина кисти'),
+                  content: StatefulBuilder(
+                    builder: (context, setState) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Текущая толщина: ${thickness.toInt()}'),
+                        Slider(
+                          value: thickness,
+                          min: 1,
+                          max: 24,
+                          divisions: 23,
+                          onChanged: (value) {
+                            setState(() {
+                              onThickness(value);
+                            });
+                          },
                         ),
-                      ),
-                );
-                if (c != null) onColor(c);
-              },
-              child: SvgPicture.asset("assets/icon/ic_palette.svg")),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Готово'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: SvgPicture.asset("assets/icon/ic_pencil.svg"),
+          ),
+          SizedBox(width: 12),
+          GestureDetector(
+            onTap: () => onEraser(!isEraser),
+            child: SvgPicture.asset("assets/icon/ic_lastic.svg"),
+          ),
+          SizedBox(width: 12),
+          GestureDetector(
+            onTap: () async {
+              final c = await showDialog<Color?>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  content: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        [
+                              Colors.black,
+                              Colors.white,
+                              Colors.red,
+                              Colors.green,
+                              Colors.blue,
+                              Colors.purple,
+                              Colors.orange,
+                            ]
+                            .map(
+                              (c) => InkWell(
+                                onTap: () => Navigator.pop(context, c),
+                                child: CircleAvatar(backgroundColor: c),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
+              );
+              if (c != null) onColor(c);
+            },
+            child: SvgPicture.asset("assets/icon/ic_palette.svg"),
+          ),
           // IconButton(
           //   onPressed: () => onEraser(!isEraser),
           //   icon: Icon(isEraser ? Icons.brush : Icons.cleaning_services),
