@@ -20,6 +20,7 @@ class EditorPage extends StatefulWidget {
 }
 
 class _EditorPageState extends State<EditorPage> {
+  final GlobalKey _containerKey = GlobalKey(); // Добавьте этот ключ
   final picker = ImagePicker();
   Color _color = Colors.black;
   double _thickness = 4;
@@ -177,6 +178,7 @@ class _EditorPageState extends State<EditorPage> {
                     ),
                     Expanded(
                       child: Container(
+                        key: _containerKey,
                         padding: EdgeInsets.all(16),
                         // height: MediaQuery.of(context).size.height * 0.8, // 80% высоты экрана
                         width: double.infinity, // На всю ширину
@@ -187,6 +189,14 @@ class _EditorPageState extends State<EditorPage> {
                         ),
                         child: GestureDetector(
                           onPanStart: (d) {
+                            final box = _containerKey.currentContext?.findRenderObject() as RenderBox;
+                            final localPos = box.globalToLocal(d.globalPosition);
+
+                            if (!box.size.contains(localPos)) {
+                              return; // Игнорируем касания вне области контейнера
+                            }
+
+                           if (!_isInside(localPos, box.size)) return;
                             final paint = Paint()
                               ..color = _isEraser ? Colors.white : _color
                               ..strokeWidth = _thickness
@@ -203,6 +213,13 @@ class _EditorPageState extends State<EditorPage> {
                             setState(() {});
                           },
                           onPanUpdate: (d) {
+                            final renderBox = _containerKey.currentContext?.findRenderObject() as RenderBox;
+                            final localPosition = renderBox.globalToLocal(d.globalPosition);
+
+                            if (!renderBox.size.contains(localPosition)) {
+                              _current = null;
+                              return;
+                            }
                             _current?.path.lineTo(d.localPosition.dx, d.localPosition.dy);
                             setState(() {});
                           },
@@ -236,6 +253,15 @@ class _Stroke {
   _Stroke(this.path, this.paint);
 }
 
+bool _isInside(Offset pos, Size size) {
+  return pos.dx >= 0 &&
+      pos.dy >= 0 &&
+      pos.dx <= size.width &&
+      pos.dy <= size.height;
+}
+
+
+
 class _CanvasPainter extends CustomPainter {
   final List<_Stroke> strokes;
   final ui.Image? bgImage;
@@ -249,6 +275,17 @@ class _CanvasPainter extends CustomPainter {
    //    Rect.fromLTWH(0, 0, size.width, size.height),
    //    Paint()..color = Colors.white,
    //  );
+
+    // Обрезаем холст по скругленным углам
+    final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final clipRadius = Radius.circular(25);
+    canvas.clipRRect(RRect.fromRectAndRadius(clipRect, clipRadius));
+
+    // Рисуем белый фон
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = Colors.white,
+    );
 
     if (bgImage != null) {
       final src = Rect.fromLTWH(
