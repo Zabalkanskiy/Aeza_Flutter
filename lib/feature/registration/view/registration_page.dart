@@ -33,8 +33,12 @@ class _RegistrationPage extends State<RegistrationPage> {
     super.dispose();
   }
 
+  bool _isKeyboardVisible(BuildContext context) {
+    return MediaQuery.of(context).viewInsets.bottom > 0;
+  }
   @override
   Widget build(BuildContext context) {
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return Stack(
       children: [
         // Общий фон для всего экрана
@@ -65,7 +69,8 @@ class _RegistrationPage extends State<RegistrationPage> {
           resizeToAvoidBottomInset: true, // ВАЖНО: позволяет экрану подниматься при клавиатуре
           appBar: AppBar(
               backgroundColor: Colors.transparent,
-              title: Text(_isLogin ? 'Вход' : 'Регистрация')),
+              //title: Text(_isLogin ? 'Вход' : 'Регистрация')
+           ),
           body: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state.errorMessage != null) {
@@ -78,173 +83,102 @@ class _RegistrationPage extends State<RegistrationPage> {
               }
             },
             builder: (context, state) {
-              return SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    key: _formKey,
-                    onChanged: _validateForm, // проверяем форму при каждом изменении
-                    child: Column(
-                      children: [
-                        // Spacer для размещения формы по центру
-                        Spacer(),
-
-                        // Поля ввода с прозрачным фоном
-
-                        Column(
+              return Stack(
+                children: [
+                  /// Скроллируемая форма
+                  Center(
+                    child: SingleChildScrollView(
+                      //keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                      child: Form(
+                        key: _formKey,
+                        onChanged: _validateForm, // <- триггерим валидацию на каждом изменении
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 0),
-                              child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text('Регистрация', style: TextStyle(color: Colors.white, fontFamily: 'Press Start 2P', fontSize: 20),)),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Регистрация',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Press Start 2P',
+                                  fontSize: 20,
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 20,),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.2), // Полупрозрачный белый
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: Color(0xFF87858F), // Цвет #87858F
-                                  width: 1.0, // Толщина 1 пиксель
-                                ),
+                            const SizedBox(height: 20),
 
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: TextFormField(
-                                controller: _name,
-                                decoration: InputDecoration(
-                                  labelText: 'Введите ваше имя',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.transparent,
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(color: Colors.white),
-
-                                validator: (v) => v != null
-                                    ? null
-                                    : 'Имя не может быть пустым',
-                              ),
+                            _buildTextField(
+                              controller: _name,
+                              label: 'Введите ваше имя',
+                              validator: (v) =>
+                              v != null && v.isNotEmpty ? null : 'Имя не может быть пустым',
                             ),
                             const SizedBox(height: 12),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.2), // Полупрозрачный белый
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: Color(0xFF87858F), // Цвет #87858F
-                                  width: 1.0, // Толщина 1 пиксель
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: TextFormField(
-                                controller: _email,
-                                decoration: InputDecoration(
-                                  labelText: 'Ваша электронная почта',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.transparent,
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(color: Colors.white),
-                                obscureText: false,
-                                keyboardType: TextInputType.emailAddress,
-                                validator: (v) => v != null && v.contains('@')
-                                    ? null
-                                    : 'Некорректная почта',
-                              ),
+
+                            _buildTextField(
+                              controller: _email,
+                              label: 'Ваша электронная почта',
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (v) =>
+                              v != null && v.contains('@') ? null : 'Некорректная почта',
                             ),
                             const SizedBox(height: 12),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.2), // Полупрозрачный белый
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: Color(0xFF87858F), // Цвет #87858F
-                                  width: 1.0, // Толщина 1 пиксель
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: TextFormField(
-                                controller: _password,
-                                decoration: InputDecoration(
-                                  labelText: 'Пароль',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.transparent,
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(color: Colors.white),
-                                obscureText: true,
-                                validator: (v) {
-                                  if(v != _passwordRepeat.text) {
-                                    return "Пароли не совпадают";
-                                  }
 
-                                  if(v != null && v.length >= 8) {
-                                    return null;
-                                  } else {
-                                    return 'Минимум 8 символов';
-                                  }
-
-                                },
-                              ),
+                            _buildTextField(
+                              controller: _password,
+                              label: 'Пароль',
+                              obscure: true,
+                              validator: (v) {
+                                if (v != _passwordRepeat.text) {
+                                  return "Пароли не совпадают";
+                                }
+                                if (v != null && v.length >= 8) {
+                                  return null;
+                                }
+                                return 'Минимум 8 символов';
+                              },
                             ),
                             const SizedBox(height: 12),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.2), // Полупрозрачный белый
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: Color(0xFF87858F), // Цвет #87858F
-                                  width: 1.0, // Толщина 1 пиксель
-                                ),
-                              ),
-                              padding: const EdgeInsets.all(16),
-                              child: TextFormField(
-                                controller: _passwordRepeat,
-                                decoration: InputDecoration(
-                                  labelText: 'Подтверждение пароля',
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  filled: true,
-                                  fillColor: Colors.transparent,
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(color: Colors.white),
-                                obscureText: true,
-                                validator: (v) {
-                                  if(v != _password.text) {
-                                    return "Пароли не совпадают";
-                                  }
 
-                                  if(v != null && v.length >= 8) {
-                                    return null;
-                                  } else {
-                                    return 'Минимум 8 символов';
-                                  }
-
-                                },
-                              ),
+                            _buildTextField(
+                              controller: _passwordRepeat,
+                              label: 'Подтверждение пароля',
+                              obscure: true,
+                              validator: (v) {
+                                if (v != _password.text) {
+                                  return "Пароли не совпадают";
+                                }
+                                if (v != null && v.length >= 8) {
+                                  return null;
+                                }
+                                return 'Минимум 8 символов';
+                              },
                             ),
                           ],
-
                         ),
+                      ),
+                    ),
+                  ),
 
-                        // Spacer для размещения кнопок внизу
-                        Spacer(),
+                  /// Кнопка фиксирована снизу
 
-                        // Кнопки привязанные к низу
-                        Column(
-                          children: [
 
-                            SizedBox(
+                      isKeyboardVisible ? const SizedBox.shrink() :
+
+                   Align(
+                        alignment: Alignment.bottomCenter,
+                        child: SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: SizedBox(
                               width: double.infinity,
                               height: 48,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: Colors.black,
+                                  backgroundColor: _isFormValid ? Colors.white : Colors.grey.shade700,
+                                  foregroundColor: _isFormValid ? Colors.black : Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10.0),
                                   ),
@@ -252,24 +186,25 @@ class _RegistrationPage extends State<RegistrationPage> {
                                 onPressed: !_isFormValid
                                     ? () {}
                                     : () {
-                                  final email = _email.text.trim();
-                                  final pass = _password.text.trim();
-                                  final name = _name.text.trim();
+                                  if (_formKey.currentState?.validate() != true) return;
                                   context.read<AuthBloc>().add(
-                                    AuthSignUp(email, pass, name),
+                                    AuthSignUp(
+                                      _email.text.trim(),
+                                      _password.text.trim(),
+                                      _name.text.trim(),
+                                    ),
                                   );
                                 },
-                                child: Text('Зарегистрироваться'),
+                                child: const Text('Зарегистрироваться'),
                               ),
                             ),
-
-                            SizedBox(height: 40,),
-                          ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
+
+
+
+                ],
               );
             },
           ),
@@ -277,5 +212,36 @@ class _RegistrationPage extends State<RegistrationPage> {
       ],
     );
   }
-}
 
+  /// Метод для отрисовки TextFormField
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+    bool obscure = false,
+    TextInputType? keyboardType,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: const Color(0xFF87858F), width: 1.0),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white),
+          border: InputBorder.none,
+          filled: true,
+          fillColor: Colors.transparent,
+        ),
+        validator: validator,
+      ),
+    );
+  }
+}
