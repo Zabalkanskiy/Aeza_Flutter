@@ -14,7 +14,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:uuid/uuid.dart';
 
 class EditorPage extends StatefulWidget {
-  const EditorPage({super.key});
+  final Uint8List? imageBytes;
+  final String? firebaseId; // ID записи в Realtime Database
+  const EditorPage({super.key, this.imageBytes, this.firebaseId});
 
   @override
   State<EditorPage> createState() => _EditorPageState();
@@ -30,6 +32,32 @@ class _EditorPageState extends State<EditorPage> {
   ui.Image? _bgImage;
   final List<_Stroke> _strokes = [];
   _Stroke? _current;
+  bool _isImageLoading = false;
+  String? _firebasePath; // Добавьте это
+
+  @override
+  void initState() {
+    super.initState();
+    // Загружаем переданное изображение, если оно есть
+    if (widget.imageBytes != null) {
+      _loadImageFromBytes(widget.imageBytes!);
+    }
+  }
+
+  Future<void> _loadImageFromBytes(Uint8List bytes) async {
+    setState(() {
+      _isImageLoading = true;
+    });
+
+    ui.decodeImageFromList(bytes, (img) {
+      if (mounted) {
+        setState(() {
+          _bgImage = img;
+          _isImageLoading = false;
+        });
+      }
+    });
+  }
 
   Future<void> _pickImage() async {
     final x = await picker.pickImage(source: ImageSource.gallery);
@@ -85,9 +113,9 @@ class _EditorPageState extends State<EditorPage> {
       name: 'Aeza_${const Uuid().v4()}',
     );
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Сохранено в галерею')));
+    // ScaffoldMessenger.of(
+    //   context,
+    // ).showSnackBar(const SnackBar(content: Text('Сохранено в галерею')));
 
     // Сохраняем в Firebase Realtime Database в base64
     final user = FirebaseAuth.instance.currentUser;
@@ -97,17 +125,31 @@ class _EditorPageState extends State<EditorPage> {
         final base64String = base64Encode(bytes);
 
         final database = FirebaseDatabase.instance.ref('aaaa/image');
-        await database.child(id).set({
-          'id': id,
-          'userId': user.uid,
-          'base64': base64String,
-          'createdAt': DateTime.now().millisecondsSinceEpoch,
-        });
+        if(widget.firebaseId!= null) {
+          database.child(widget.firebaseId!).update({
+              ///обновляем данные
+              'id': widget.firebaseId!,
+              'userId': user.uid,
+              'base64': base64String,
+              'createdAt': DateTime.now().millisecondsSinceEpoch,
+          });
+        } else {
+          await database.child(id).set({
+            'id': id,
+            'userId': user.uid,
+            'base64': base64String,
+            'createdAt': DateTime
+                .now()
+                .millisecondsSinceEpoch,
+          });
+        }
 
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Загружено в Firebase')));
+        Navigator.of(context).pop();
+        //Navigator.canPop(context);
+        // ScaffoldMessenger.of(
+        //   context,
+        // ).showSnackBar(const SnackBar(content: Text('Загружено в Firebase')));
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(
@@ -158,8 +200,9 @@ class _EditorPageState extends State<EditorPage> {
             // backgroundColor: Colors.transparent.withOpacity(0.3),
             backgroundColor: Color(0x10C4C4C4).withOpacity(0.2),
             elevation: 0, // Убираем тень
+            centerTitle: true,
             title: const Text(
-              'Редактор',
+              'Новое изображение',
               style: TextStyle(color: Color(0xFFEEEEEE)),
             ),
             leading: IconButton(
@@ -172,13 +215,13 @@ class _EditorPageState extends State<EditorPage> {
               ),
             ),
             actions: [
-              IconButton(
-                onPressed: _share,
-                icon: const Icon(Icons.ios_share, color: Color(0xFFEEEEEE)),
-              ),
+              // IconButton(
+              //   onPressed: _share,
+              //   icon: const Icon(Icons.ios_share, color: Color(0xFFEEEEEE)),
+              // ),
               IconButton(
                 onPressed: _save,
-                icon: const Icon(Icons.save, color: Color(0xFFEEEEEE)),
+                icon: const Icon(Icons.check, color: Color(0xFFEEEEEE)),
               ),
             ],
             shape: RoundedRectangleBorder(
@@ -208,11 +251,13 @@ class _EditorPageState extends State<EditorPage> {
                         setState(() => _isEraser = e);
                       },
                       onImport: _pickImage,
+                      onSave: _save,
+                      onShare: _share,
                     ),
                     Expanded(
                       child: Container(
                         key: _containerKey,
-                        padding: EdgeInsets.all(16),
+                       // padding: EdgeInsets.all(16),
                         // height: MediaQuery.of(context).size.height * 0.8, // 80% высоты экрана
                         width: double.infinity, // На всю ширину
                         decoration: BoxDecoration(
@@ -273,13 +318,20 @@ class _EditorPageState extends State<EditorPage> {
                           onPanEnd: (_) {
                             _current = null;
                           },
-                          child: RepaintBoundary(
-                            key: _repaintKey,
-                            child: CustomPaint(
-                              painter: _CanvasPainter(_strokes, _bgImage),
-                              child:
-                                  const SizedBox.expand(), // гарантированно растягиваем
-                            ),
+                          child: Stack(
+                            children: [
+                              RepaintBoundary(
+                                key: _repaintKey,
+                                child: CustomPaint(
+                                  painter: _CanvasPainter(_strokes, _bgImage),
+                                  child:
+                                      const SizedBox.expand(), // гарантированно растягиваем
+                                ),
+                              ),
+
+                              if (_isImageLoading)
+                                const Center(child: CircularProgressIndicator()),
+                            ],
                           ),
                         ),
                       ),
@@ -333,17 +385,36 @@ class _CanvasPainter extends CustomPainter {
       Paint()..color = Colors.white,
     );
 
+    // Рисуем фоновое изображение, если оно есть
     if (bgImage != null) {
-      final src = Rect.fromLTWH(
+      // Сохраняем пропорции изображения
+      final double imageRatio = bgImage!.width / bgImage!.height;
+      final double canvasRatio = size.width / size.height;
+
+      Rect dstRect;
+      if (imageRatio > canvasRatio) {
+        // Изображение шире холста
+        final double height = size.width / imageRatio;
+        final double top = (size.height - height) / 2;
+        dstRect = Rect.fromLTWH(0, top, size.width, height);
+      } else {
+        // Изображение выше холста
+        final double width = size.height * imageRatio;
+        final double left = (size.width - width) / 2;
+        dstRect = Rect.fromLTWH(left, 0, width, size.height);
+      }
+
+      final srcRect = Rect.fromLTWH(
         0,
         0,
         bgImage!.width.toDouble(),
         bgImage!.height.toDouble(),
       );
-      final dst = Rect.fromLTWH(0, 0, size.width, size.height);
-      canvas.drawImageRect(bgImage!, src, dst, Paint());
+
+      canvas.drawImageRect(bgImage!, srcRect, dstRect, Paint());
     }
 
+    // Рисуем штрихи поверх изображения
     for (final s in strokes) {
       canvas.drawPath(s.path, s.paint);
     }
@@ -361,6 +432,8 @@ class _Toolbar extends StatelessWidget {
   final ValueChanged<double> onThickness;
   final ValueChanged<bool> onEraser;
   final VoidCallback onImport;
+  final VoidCallback onSave;
+  final VoidCallback onShare;
   const _Toolbar({
     required this.color,
     required this.thickness,
@@ -369,6 +442,8 @@ class _Toolbar extends StatelessWidget {
     required this.onThickness,
     required this.onEraser,
     required this.onImport,
+    required this.onSave,
+    required this.onShare,
   });
 
   @override
@@ -380,7 +455,7 @@ class _Toolbar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           GestureDetector(
-            onTap: onImport,
+            onTap: onShare,
             child: SvgPicture.asset("assets/icon/ic_download.svg"),
           ),
           SizedBox(width: 12),
@@ -391,6 +466,7 @@ class _Toolbar extends StatelessWidget {
           SizedBox(width: 12),
           GestureDetector(
             onTap: () {
+              double tempThickness = thickness; // Локальная переменная для диалога
               // Показать диалог для выбора толщины кисти
               showDialog(
                 context: context,
@@ -400,16 +476,18 @@ class _Toolbar extends StatelessWidget {
                     builder: (context, setState) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Текущая толщина: ${thickness.toInt()}'),
+                        Text('Текущая толщина: ${tempThickness.toInt()}'),
                         Slider(
-                          value: thickness,
+                          value: tempThickness,
                           min: 1,
                           max: 24,
                           divisions: 23,
                           onChanged: (value) {
                             setState(() {
-                              onThickness(value);
+                              tempThickness = value;
                             });
+                            // Немедленно обновляем главное состояние
+                            onThickness(value);
                           },
                         ),
                       ],
