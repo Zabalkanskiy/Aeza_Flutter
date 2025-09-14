@@ -11,7 +11,7 @@ class GalleryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser!;
-    final database = FirebaseDatabase.instance.ref('aaaa/image');
+    final database = FirebaseDatabase.instance.ref('aaaa/image/${user.uid}');
 
     return Stack(
       children: [

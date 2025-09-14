@@ -124,7 +124,7 @@ class _EditorPageState extends State<EditorPage> {
         final id = const Uuid().v4();
         final base64String = base64Encode(bytes);
 
-        final database = FirebaseDatabase.instance.ref('aaaa/image');
+        final database = FirebaseDatabase.instance.ref('aaaa/image/${user.uid}');
         if(widget.firebaseId!= null) {
           database.child(widget.firebaseId!).update({
               ///обновляем данные
