@@ -26,6 +26,7 @@ class AezaApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'AezaFlutter',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
