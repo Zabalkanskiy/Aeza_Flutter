@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:aeza_flutter/feature/registration/view/registration_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,7 +37,18 @@ class AezaApp extends StatelessWidget {
             case '/gallery':
               return MaterialPageRoute(builder: (_) => const GalleryPage());
             case '/editor':
-              return MaterialPageRoute(builder: (_) => const EditorPage());
+              final arguments = settings.arguments;
+              if (arguments is Map<String, dynamic>) {
+                return MaterialPageRoute(
+                  builder: (_) => EditorPage(
+                    imageBytes: arguments['imageBytes'],
+                     firebaseId: arguments['firebaseId'],
+                  ),
+                );
+              } else {
+                return MaterialPageRoute(builder: (_) => const EditorPage());
+              }
+
             case '/registration':
               return MaterialPageRoute(builder: (_) => const RegistrationPage());
 
