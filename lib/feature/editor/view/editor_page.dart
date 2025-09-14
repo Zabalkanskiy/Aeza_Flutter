@@ -385,31 +385,60 @@ class _CanvasPainter extends CustomPainter {
       Paint()..color = Colors.white,
     );
 
-    // Рисуем фоновое изображение, если оно есть
+    // // Рисуем фоновое изображение, если оно есть
+    // if (bgImage != null) {
+    //   // Сохраняем пропорции изображения
+    //   final double imageRatio = bgImage!.width / bgImage!.height;
+    //   final double canvasRatio = size.width / size.height;
+    //
+    //   Rect dstRect;
+    //   if (imageRatio > canvasRatio) {
+    //     // Изображение шире холста
+    //     final double height = size.width / imageRatio;
+    //     final double top = (size.height - height) / 2;
+    //     dstRect = Rect.fromLTWH(0, top, size.width, height);
+    //   } else {
+    //     // Изображение выше холста
+    //     final double width = size.height * imageRatio;
+    //     final double left = (size.width - width) / 2;
+    //     dstRect = Rect.fromLTWH(left, 0, width, size.height);
+    //   }
+    //
+    //   final srcRect = Rect.fromLTWH(
+    //     0,
+    //     0,
+    //     bgImage!.width.toDouble(),
+    //     bgImage!.height.toDouble(),
+    //   );
+    //
+    //   canvas.drawImageRect(bgImage!, srcRect, dstRect, Paint());
+    // }
+
+    // Рисуем фоновое изображение с эффектом BoxFit.cover
     if (bgImage != null) {
-      // Сохраняем пропорции изображения
-      final double imageRatio = bgImage!.width / bgImage!.height;
-      final double canvasRatio = size.width / size.height;
-
-      Rect dstRect;
-      if (imageRatio > canvasRatio) {
-        // Изображение шире холста
-        final double height = size.width / imageRatio;
-        final double top = (size.height - height) / 2;
-        dstRect = Rect.fromLTWH(0, top, size.width, height);
-      } else {
-        // Изображение выше холста
-        final double width = size.height * imageRatio;
-        final double left = (size.width - width) / 2;
-        dstRect = Rect.fromLTWH(left, 0, width, size.height);
-      }
-
       final srcRect = Rect.fromLTWH(
         0,
         0,
         bgImage!.width.toDouble(),
         bgImage!.height.toDouble(),
       );
+
+      final double imageRatio = bgImage!.width / bgImage!.height;
+      final double canvasRatio = size.width / size.height;
+
+      Rect dstRect;
+
+      if (imageRatio > canvasRatio) {
+        // изображение относительно шире → растягиваем по высоте
+        final double newWidth = size.height * imageRatio;
+        final double left = (size.width - newWidth) / 2;
+        dstRect = Rect.fromLTWH(left, 0, newWidth, size.height);
+      } else {
+        // изображение относительно выше → растягиваем по ширине
+        final double newHeight = size.width / imageRatio;
+        final double top = (size.height - newHeight) / 2;
+        dstRect = Rect.fromLTWH(0, top, size.width, newHeight);
+      }
 
       canvas.drawImageRect(bgImage!, srcRect, dstRect, Paint());
     }
