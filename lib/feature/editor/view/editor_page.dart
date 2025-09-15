@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:image_picker/image_picker.dart';
@@ -33,7 +34,6 @@ class _EditorPageState extends State<EditorPage> {
   final List<_Stroke> _strokes = [];
   _Stroke? _current;
   bool _isImageLoading = false;
-  String? _firebasePath; // Добавьте это
 
   @override
   void initState() {
@@ -541,36 +541,91 @@ class _Toolbar extends StatelessWidget {
           SizedBox(width: 12),
           GestureDetector(
             onTap: () async {
-              final c = await showDialog<Color?>(
+              // Список стандартных цветов
+              final standardColors = [
+                Colors.black,
+                Colors.white,
+                Colors.red,
+                Colors.green,
+                Colors.blue,
+                Colors.purple,
+                Colors.orange,
+                Colors.yellow,
+                Colors.cyan,
+                Colors.brown,
+                Colors.pink,
+                Colors.teal,
+                Colors.lime,
+              ];
+
+              // Показываем диалог выбора цвета
+              final selectedColor = await showDialog<Color?>(
                 context: context,
                 builder: (_) => AlertDialog(
-                  content: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        [
-                              Colors.black,
-                              Colors.white,
-                              Colors.red,
-                              Colors.green,
-                              Colors.blue,
-                              Colors.purple,
-                              Colors.orange,
-                            ]
-                            .map(
-                              (c) => InkWell(
-                                onTap: () => Navigator.pop(context, c),
-                                child: CircleAvatar(backgroundColor: c),
+                  title: const Text('Выберите цвет'),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: standardColors
+                              .map(
+                                (c) => InkWell(
+                              onTap: () => Navigator.pop(context, c),
+                              child: CircleAvatar(backgroundColor: c, radius: 16),
+                            ),
+                          )
+                              .toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        // Кнопка для открытия color picker
+                        ElevatedButton(
+                          onPressed: () async {
+                            // Закрываем текущий диалог и откроем color picker
+                            Navigator.pop(context);
+                            Color pickerColor = color; // текущий цвет
+                            final picked = await showDialog<Color?>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('Выберите свой цвет'),
+                                content: SizedBox(
+                                  width: 300,
+                                  height: 400,
+                                  child: ColorPicker(
+                                    pickerColor: pickerColor,
+                                    onColorChanged: (c) => pickerColor = c,
+                                    enableAlpha: false,
+                                    pickerAreaHeightPercent: 0.8,
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Отмена'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(pickerColor),
+                                    child: const Text('Выбрать'),
+                                  ),
+                                ],
                               ),
-                            )
-                            .toList(),
+                            );
+                            if (picked != null) onColor(picked);
+                          },
+                          child: const Text('Свой цвет'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
-              if (c != null) onColor(c);
+
+              if (selectedColor != null) onColor(selectedColor);
             },
             child: SvgPicture.asset("assets/icon/ic_palette.svg"),
-          ),
+          )
           // IconButton(
           //   onPressed: () => onEraser(!isEraser),
           //   icon: Icon(isEraser ? Icons.brush : Icons.cleaning_services),
