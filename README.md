@@ -1,6 +1,6 @@
 # AezaFlutter
 
-iOS Flutter app with Firebase auth/storage, drawing editor, gallery. Uses BLoC for state, Dio+Retrofit for network.
+iOS Flutter app with Firebase auth/storage, drawing editor, gallery. Uses BLoC for state,.
 
 ## Stack
 - Flutter, Dart
@@ -15,12 +15,9 @@ iOS Flutter app with Firebase auth/storage, drawing editor, gallery. Uses BLoC f
 - Share sheet export.
 - Gallery of user images, tap to open in editor, sign out.
 
-<img src="screenshots/screenshot_1.png" width="200" height="445"> <img src="screenshots/screenshot_2.png" width="200" height="445">
-
-
 ## Описание (Русский)
 
-iOS-приложение на Flutter с аутентификацией Firebase, хранилищем и редактором рисования, а также галереей. Для управления состоянием используется BLoC, для сети — Dio+Retrofit.
+iOS-приложение на Flutter с аутентификацией Firebase, хранилищем и редактором рисования, а также галереей. Для управления состоянием используется BLoC.
 
 ## Стек
 - Flutter, Dart
@@ -35,4 +32,4 @@ iOS-приложение на Flutter с аутентификацией Firebase
 - Экспорт через системное окно «Поделиться»
 - Галерея пользовательских изображений, открытие изображения в редактор по тапу, выход из аккаунта
 
-<img src="screenshots/screenshot_1.png" width="200" height="445"> <img src="screenshots/screenshot_2.png" width="200" height="445">
+<img src="screenshots/screenshot_1.png" width="200" height="445"> <img src="screenshots/screenshot_2.png" width="200" height="445"> <img src="screenshots/screenshot_3.png" width="200" height="445" <img src="screenshots/screenshot_4.png" width="200" height="445">
