@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 
 import 'package:aeza_flutter/feature/registration/view/registration_page.dart';
 import 'package:flutter/material.dart';

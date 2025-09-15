@@ -15,7 +15,6 @@ class _RegistrationPage extends State<RegistrationPage> {
   final _password = TextEditingController();
   final _name = TextEditingController();
   final _passwordRepeat = TextEditingController();
-  bool _isLogin = true;
   bool _isFormValid = false; // Добавьте эту переменную
 
   void _validateForm() {
@@ -33,9 +32,7 @@ class _RegistrationPage extends State<RegistrationPage> {
     super.dispose();
   }
 
-  bool _isKeyboardVisible(BuildContext context) {
-    return MediaQuery.of(context).viewInsets.bottom > 0;
-  }
+
   @override
   Widget build(BuildContext context) {
     final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
@@ -223,7 +220,7 @@ class _RegistrationPage extends State<RegistrationPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
+        color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(color: const Color(0xFF87858F), width: 1.0),
       ),

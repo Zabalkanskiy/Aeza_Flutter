@@ -24,7 +24,7 @@ class CustomInputField extends StatelessWidget {
     return Container(
       height: 90,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
+        color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
           color: const Color(0xFF87858F),

@@ -14,7 +14,7 @@ class _AuthPageState extends State<AuthPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _isLogin = true;
+  final bool _isLogin = true;
 
   @override
   void dispose() {
@@ -237,8 +237,9 @@ class _AuthPageState extends State<AuthPage> {
                               onPressed: state.isLoading
                                   ? null
                                   : () {
-                                if (_formKey.currentState?.validate() != true)
+                                if (_formKey.currentState?.validate() != true) {
                                   return;
+                                }
                                 final email = _email.text.trim();
                                 final pass = _password.text.trim();
                                   context.read<AuthBloc>().add(

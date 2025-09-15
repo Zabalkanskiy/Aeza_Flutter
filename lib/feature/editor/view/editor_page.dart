@@ -198,7 +198,7 @@ class _EditorPageState extends State<EditorPage> {
           backgroundColor: Colors.transparent, // Делаем Scaffold прозрачным
           appBar: AppBar(
             // backgroundColor: Colors.transparent.withOpacity(0.3),
-            backgroundColor: Color(0x10C4C4C4).withOpacity(0.2),
+            backgroundColor: Color(0x10C4C4C4).withValues(alpha: 0.2),
             elevation: 0, // Убираем тень
             centerTitle: true,
             title: const Text(

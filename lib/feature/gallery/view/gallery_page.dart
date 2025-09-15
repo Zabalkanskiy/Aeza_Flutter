@@ -106,7 +106,7 @@ class GalleryPage extends StatelessWidget {
               style: TextStyle(color: Color(0xFFEEEEEE)),
               textAlign: TextAlign.center,
             ),
-            backgroundColor: Color(0x10C4C4C4).withOpacity(0.2),
+            backgroundColor: Color(0x10C4C4C4).withValues(alpha: 0.2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.horizontal(
                 left: Radius.circular(15),
@@ -195,7 +195,7 @@ class GalleryPage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
+                                      color: Colors.black.withValues(alpha: 0.1),
                                       blurRadius: 4,
                                       offset: const Offset(0, 2),
                                     ),
