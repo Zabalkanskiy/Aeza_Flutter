@@ -52,6 +52,7 @@ class _AuthPageState extends State<AuthPage> {
 
         Scaffold(
           backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: true,
           appBar: AppBar(
               backgroundColor: Colors.transparent,
               title: Text(_isLogin ? 'Вход' : 'Регистрация')),
@@ -67,53 +68,74 @@ class _AuthPageState extends State<AuthPage> {
               }
             },
             builder: (context, state) {
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // Spacer для размещения формы по центру
-                      Spacer(),
-
-                      // Поля ввода с прозрачным фоном
-
-                         Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(left: 0),
-                              child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text('Вход', style: TextStyle(color: Colors.white, fontFamily: 'Press Start 2P', fontSize: 20),)),
+              return Column(
+                children: [
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight, // заполняем экран
                             ),
-                            SizedBox(height: 20,),
-                            CustomInputField(
-                              label: 'e-mail',
-                              hintText: 'Введите электронную почту',
-                              controller: _email,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (v) =>
-                              v != null && v.contains('@') ? null : 'Некорректный email',
+                            child: IntrinsicHeight(
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center, // центр по вертикали
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Вход',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontFamily: 'Press Start 2P',
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                
+                                    CustomInputField(
+                                      label: 'e-mail',
+                                      hintText: 'Введите электронную почту',
+                                      controller: _email,
+                                      keyboardType: TextInputType.emailAddress,
+                                      validator: (v) =>
+                                      v != null && v.contains('@') ? null : 'Некорректный email',
+                                    ),
+                                    const SizedBox(height: 12),
+                                
+                                    CustomInputField(
+                                      label: 'Пароль',
+                                      hintText: 'Введите пароль',
+                                      controller: _password,
+                                      obscureText: true,
+                                      validator: (v) =>
+                                      v != null && v.length >= 8 ? null : 'Минимум 8 символов',
+                                    ),
+                                
+                                    const SizedBox(height: 100), // запас под кнопки
+                                  ],
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 12),
-                            CustomInputField(
-                              label: 'Подтверждение пароля',
-                              hintText: 'Введите пароль',
-                              controller: _password,
-                              obscureText: true,
-                                validator: (v) => v != null && v.length >= 8
-                                      ? null
-                                      : 'Минимум 8 символов',
-                            ),
-                          ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
-                      ),
-
-                      // Spacer для размещения кнопок внизу
-                      Spacer(),
-
-                      // Кнопки привязанные к низу
-                      Column(
+                  // ====== Кнопки прижаты к низу ======
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: double.infinity,
@@ -125,25 +147,23 @@ class _AuthPageState extends State<AuthPage> {
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(10.0),
-                              boxShadow: [
-                              ],
                             ),
                             child: TextButton(
                               onPressed: state.isLoading
                                   ? null
                                   : () {
-                                if (_formKey.currentState?.validate() != true) {
-                                  return;
-                                }
+                                if (_formKey.currentState?.validate() !=
+                                    true) return;
+
                                 final email = _email.text.trim();
                                 final pass = _password.text.trim();
-                                  context.read<AuthBloc>().add(
-                                    AuthSignIn(email, pass),
-                                  );
+                                context.read<AuthBloc>().add(
+                                  AuthSignIn(email, pass),
+                                );
                               },
-                              child: Text(
+                              child: const Text(
                                 "Войти",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -165,18 +185,17 @@ class _AuthPageState extends State<AuthPage> {
                               onPressed: state.isLoading
                                   ? null
                                   : () {
-                                  Navigator.of(context).pushNamed('/registration');
+                                Navigator.of(context)
+                                    .pushNamed('/registration');
                               },
-                              child: Text( "Регистрация"),
+                              child: const Text("Регистрация"),
                             ),
                           ),
-
-                          SizedBox(height: 40,),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               );
             },
           ),
