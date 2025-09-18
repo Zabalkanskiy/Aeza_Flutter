@@ -59,5 +59,13 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
-	</dict>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>Разрешение требуется библиотекой (image_picker / permission_handler), но не используется в приложении.</string>
+
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>Разрешение требуется библиотекой (Firebase / permission_handler), но не используется в приложении.</string>
+
+        <key>NSContactsUsageDescription</key>
+        <string>Разрешение может требоваться библиотекой, но не используется в приложении.</string>
+    </dict>
 </plist>
