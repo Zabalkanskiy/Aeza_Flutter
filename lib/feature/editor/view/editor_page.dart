@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:uuid/uuid.dart';
+import 'package:aeza_flutter/core/notification_service.dart';
 
 class EditorPage extends StatefulWidget {
   final Uint8List? imageBytes;
@@ -84,10 +85,8 @@ class _EditorPageState extends State<EditorPage> {
   Future<void> _save() async {
     PermissionStatus status;
 
-
     if (Platform.isAndroid) {
       status = await Permission.photos.request();
-
     }
     // Для iOS используем Permission.photosAddOnly
     else if (Platform.isIOS) {
@@ -111,6 +110,8 @@ class _EditorPageState extends State<EditorPage> {
       quality: 100,
       name: 'Aeza_${const Uuid().v4()}',
     );
+    // Локальное уведомление об успешном сохранении
+    await NotificationService.I.showSavedImageNotification();
     if (!mounted) return;
     // ScaffoldMessenger.of(
     //   context,
@@ -123,29 +124,28 @@ class _EditorPageState extends State<EditorPage> {
         final id = const Uuid().v4();
         final base64String = base64Encode(bytes);
 
-        final database = FirebaseDatabase.instance.ref('aaaa/image/${user.uid}');
-        if(widget.firebaseId!= null) {
+        final database = FirebaseDatabase.instance.ref(
+          'aaaa/image/${user.uid}',
+        );
+        if (widget.firebaseId != null) {
           database.child(widget.firebaseId!).update({
-              ///обновляем данные
-              'id': widget.firebaseId!,
-              'userId': user.uid,
-              'base64': base64String,
-              'createdAt': DateTime.now().millisecondsSinceEpoch,
+            ///обновляем данные
+            'id': widget.firebaseId!,
+            'userId': user.uid,
+            'base64': base64String,
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
           });
         } else {
           await database.child(id).set({
             'id': id,
             'userId': user.uid,
             'base64': base64String,
-            'createdAt': DateTime
-                .now()
-                .millisecondsSinceEpoch,
+            'createdAt': DateTime.now().millisecondsSinceEpoch,
           });
         }
 
         if (!mounted) return;
         Navigator.of(context).pop();
-
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(
@@ -320,7 +320,9 @@ class _EditorPageState extends State<EditorPage> {
                               ),
 
                               if (_isImageLoading)
-                                const Center(child: CircularProgressIndicator()),
+                                const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
                             ],
                           ),
                         ),
@@ -450,7 +452,8 @@ class _Toolbar extends StatelessWidget {
           SizedBox(width: 12),
           GestureDetector(
             onTap: () {
-              double tempThickness = thickness; // Локальная переменная для диалога
+              double tempThickness =
+                  thickness; // Локальная переменная для диалога
               // Показать диалог для выбора толщины кисти
               showDialog(
                 context: context,
@@ -528,10 +531,13 @@ class _Toolbar extends StatelessWidget {
                           children: standardColors
                               .map(
                                 (c) => InkWell(
-                              onTap: () => Navigator.pop(context, c),
-                              child: CircleAvatar(backgroundColor: c, radius: 16),
-                            ),
-                          )
+                                  onTap: () => Navigator.pop(context, c),
+                                  child: CircleAvatar(
+                                    backgroundColor: c,
+                                    radius: 16,
+                                  ),
+                                ),
+                              )
                               .toList(),
                         ),
                         const SizedBox(height: 16),
@@ -557,11 +563,13 @@ class _Toolbar extends StatelessWidget {
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
                                     child: const Text('Отмена'),
                                   ),
                                   TextButton(
-                                    onPressed: () => Navigator.of(context).pop(pickerColor),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(pickerColor),
                                     child: const Text('Выбрать'),
                                   ),
                                 ],
@@ -580,7 +588,7 @@ class _Toolbar extends StatelessWidget {
               if (selectedColor != null) onColor(selectedColor);
             },
             child: SvgPicture.asset("assets/icon/ic_palette.svg"),
-          )
+          ),
         ],
       ),
     );

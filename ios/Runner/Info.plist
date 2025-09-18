@@ -53,5 +53,9 @@
     <string>Приложению необходимо это разрешение для сохранения изображений</string>
     <key>NSUserNotificationUsageDescription</key>
     <string>Приложение отправляет уведомления об успешном сохранении изображения в галерею и других важных событиях.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+    </array>
 </dict>
 </plist>
