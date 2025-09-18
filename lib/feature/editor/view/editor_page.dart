@@ -162,7 +162,19 @@ class _EditorPageState extends State<EditorPage> {
       mimeType: 'image/png',
       name: 'Aeza.png',
     );
-    await Share.shareXFiles([xFile]);
+
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box!.localToGlobal(Offset.zero) & box.size;
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [xFile],
+        sharePositionOrigin: sharePositionOrigin,
+        // Дополнительные параметры
+        text: 'Посмотрите мое изображение',
+        subject: 'Изображение из Aeza',
+      ),
+    );
   }
 
   @override
