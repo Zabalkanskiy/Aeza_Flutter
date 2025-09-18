@@ -40,11 +40,6 @@ class GalleryPage extends StatelessWidget {
         Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            //leading: const Icon(Icons.exit_to_app),
-            // leading: Transform.scale(
-            //   scale: 0.5, // коэффициент масштабирования
-            //   child: SvgPicture.asset("assets/icon/ic_login.svg"),
-            // ),
             leading: GestureDetector(
               onTap: () async {
                 await FirebaseAuth.instance.signOut();
@@ -114,10 +109,6 @@ class GalleryPage extends StatelessWidget {
               ),
             ),
           ),
-          // floatingActionButton: FloatingActionButton(
-          //   onPressed: () => Navigator.of(context).pushNamed('/editor'),
-          //   child: const Icon(Icons.add),
-          // ),
           body: Column(
             children: [
               Expanded(
@@ -222,31 +213,6 @@ class GalleryPage extends StatelessWidget {
                   },
                 ),
               ),
-              // Кнопка "Создать" внизу экрана
-              // Container(
-              //   width: double.infinity,
-              //   height: 48,
-              //   margin: const EdgeInsets.all(16),
-              //   decoration: BoxDecoration(
-              //     gradient: const LinearGradient(
-              //       colors: [Color(0xFF8924E7), Color(0xFF6A46F9)],
-              //       begin: Alignment.topLeft,
-              //       end: Alignment.bottomRight,
-              //     ),
-              //     borderRadius: BorderRadius.circular(10.0),
-              //   ),
-              //   child: TextButton(
-              //     onPressed: () => Navigator.of(context).pushNamed('/editor'),
-              //     child: const Text(
-              //       "Создать",
-              //       style: TextStyle(
-              //         color: Colors.white,
-              //         fontWeight: FontWeight.bold,
-              //       ),
-              //     ),
-              //   ),
-              // ),
-              // SizedBox(height: 40),
             ],
           ),
         ),

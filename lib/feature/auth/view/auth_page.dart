@@ -95,75 +95,6 @@ class _AuthPageState extends State<AuthPage> {
                               validator: (v) =>
                               v != null && v.contains('@') ? null : 'Некорректный email',
                             ),
-                            // Container(
-                            //   height: 78,
-                            //   decoration: BoxDecoration(
-                            //     color: Colors.black.withOpacity(0.2), // Полупрозрачный белый
-                            //     borderRadius: BorderRadius.circular(15),
-                            //     border: Border.all(
-                            //       color: Color(0xFF87858F), // Цвет #87858F
-                            //       width: 1.0, // Толщина 1 пиксель
-                            //     ),
-                            //
-                            //   ),
-                            //   padding: const EdgeInsets.all(8),
-                            //   child: Column(
-                            //     crossAxisAlignment: CrossAxisAlignment.start,
-                            //     children: [
-                            //       Padding(
-                            //         padding: const EdgeInsets.only(left: 12, bottom: 4),
-                            //         child: Text(
-                            //           'E-mail',
-                            //           style: TextStyle(
-                            //             color: Colors.white,
-                            //             fontSize: 14,
-                            //             fontWeight: FontWeight.normal
-                            //           ),
-                            //         ),
-                            //       ),
-                            //       TextFormField(
-                            //         controller: _email,
-                            //         decoration: InputDecoration(
-                            //           // labelText: 'Email',
-                            //           // labelStyle: TextStyle(color: Colors.white,
-                            //           //   height: 0.8, // уменьшаем межстрочный интервал
-                            //           // ),
-                            //          // contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-                            //           hintText: 'Введите электронную почту',
-                            //           hintStyle: TextStyle(color: Colors.white70,
-                            //             decoration: TextDecoration.underline, // подчёркивание hint текста
-                            //             ), // чтобы было видно на тёмном фоне
-                            //           // enabledBorder: UnderlineInputBorder(
-                            //           //   borderSide: BorderSide(color: Colors.white70),
-                            //           // ),
-                            //           // helperText: 'Введите электронную почту',
-                            //           // helperStyle: TextStyle(color: Colors.white70,
-                            //           //  // height: 0.2, // уменьшаем межстрочный интервал
-                            //           //   ),
-                            //           filled: true,
-                            //           fillColor: Colors.transparent,
-                            //           border: InputBorder.none,
-                            //           isDense: true, // делает поле более "плотным"
-                            //           contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12), // убираем отступы
-                            //         ),
-                            //         style: TextStyle(color: Colors.white),
-                            //         keyboardType: TextInputType.emailAddress,
-                            //         validator: (v) => v != null && v.contains('@')
-                            //             ? null
-                            //             : 'Некорректный email',
-                            //       ),
-                            //       Padding(
-                            //         padding: EdgeInsets.symmetric(horizontal: 12),
-                            //         child: Divider(
-                            //
-                            //           height: 1, // высота разделителя
-                            //           thickness: 1,
-                            //           color: Colors.white70,
-                            //         ),
-                            //       )
-                            //     ],
-                            //   ),
-                            // ),
                             const SizedBox(height: 12),
                             CustomInputField(
                               label: 'Подтверждение пароля',
@@ -174,36 +105,6 @@ class _AuthPageState extends State<AuthPage> {
                                       ? null
                                       : 'Минимум 8 символов',
                             ),
-                            // Container(
-                            //   decoration: BoxDecoration(
-                            //     color: Colors.black.withOpacity(0.2), // Полупрозрачный белый
-                            //     borderRadius: BorderRadius.circular(15),
-                            //     border: Border.all(
-                            //       color: Color(0xFF87858F), // Цвет #87858F
-                            //       width: 1.0, // Толщина 1 пиксель
-                            //     ),
-                            //   ),
-                            //   padding: const EdgeInsets.all(16),
-                            //   child: TextFormField(
-                            //     controller: _password,
-                            //     decoration: InputDecoration(
-                            //       labelText: 'Подтверждение пароля',
-                            //       labelStyle: TextStyle(color: Colors.white),
-                            //       // hintText: 'Введите пароль',
-                            //       // hintStyle: TextStyle(color: Colors.white70),
-                            //       helperText: 'Введите пароль',
-                            //       helperStyle: TextStyle(color: Colors.white70),
-                            //       filled: true,
-                            //       fillColor: Colors.transparent,
-                            //       border: InputBorder.none,
-                            //     ),
-                            //     style: TextStyle(color: Colors.white),
-                            //     obscureText: true,
-                            //     validator: (v) => v != null && v.length >= 8
-                            //         ? null
-                            //         : 'Минимум 8 символов',
-                            //   ),
-                            // ),
                           ],
 
                       ),
@@ -225,12 +126,6 @@ class _AuthPageState extends State<AuthPage> {
                               ),
                               borderRadius: BorderRadius.circular(10.0),
                               boxShadow: [
-                                // BoxShadow(
-                                //   color: Colors.grey.withOpacity(0.5),
-                                //   spreadRadius: 1,
-                                //   blurRadius: 5,
-                                //   offset: const Offset(0, 3),
-                                // ),
                               ],
                             ),
                             child: TextButton(

@@ -84,15 +84,14 @@ class _EditorPageState extends State<EditorPage> {
   Future<void> _save() async {
     PermissionStatus status;
 
-    // Для Android используем Permission.storage
+
     if (Platform.isAndroid) {
       status = await Permission.photos.request();
-      //status = await Permission.storage.request();
+
     }
     // Для iOS используем Permission.photosAddOnly
     else if (Platform.isIOS) {
       status = await Permission.photos.request();
-      //status = await Permission.photosAddOnly.request();
     } else {
       status = await Permission.photosAddOnly.request();
     }
@@ -146,10 +145,7 @@ class _EditorPageState extends State<EditorPage> {
 
         if (!mounted) return;
         Navigator.of(context).pop();
-        //Navigator.canPop(context);
-        // ScaffoldMessenger.of(
-        //   context,
-        // ).showSnackBar(const SnackBar(content: Text('Загружено в Firebase')));
+
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(
@@ -215,10 +211,6 @@ class _EditorPageState extends State<EditorPage> {
               ),
             ),
             actions: [
-              // IconButton(
-              //   onPressed: _share,
-              //   icon: const Icon(Icons.ios_share, color: Color(0xFFEEEEEE)),
-              // ),
               IconButton(
                 onPressed: _save,
                 icon: const Icon(Icons.check, color: Color(0xFFEEEEEE)),
@@ -257,8 +249,6 @@ class _EditorPageState extends State<EditorPage> {
                     Expanded(
                       child: Container(
                         key: _containerKey,
-                       // padding: EdgeInsets.all(16),
-                        // height: MediaQuery.of(context).size.height * 0.8, // 80% высоты экрана
                         width: double.infinity, // На всю ширину
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -368,12 +358,6 @@ class _CanvasPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // canvas.drawColor(Colors.white, BlendMode.srcOver);
-    //  canvas.drawRect(
-    //    Rect.fromLTWH(0, 0, size.width, size.height),
-    //    Paint()..color = Colors.white,
-    //  );
-
     // Обрезаем холст по скругленным углам
     final clipRect = Rect.fromLTWH(0, 0, size.width, size.height);
     final clipRadius = Radius.circular(25);
@@ -384,35 +368,6 @@ class _CanvasPainter extends CustomPainter {
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..color = Colors.white,
     );
-
-    // // Рисуем фоновое изображение, если оно есть
-    // if (bgImage != null) {
-    //   // Сохраняем пропорции изображения
-    //   final double imageRatio = bgImage!.width / bgImage!.height;
-    //   final double canvasRatio = size.width / size.height;
-    //
-    //   Rect dstRect;
-    //   if (imageRatio > canvasRatio) {
-    //     // Изображение шире холста
-    //     final double height = size.width / imageRatio;
-    //     final double top = (size.height - height) / 2;
-    //     dstRect = Rect.fromLTWH(0, top, size.width, height);
-    //   } else {
-    //     // Изображение выше холста
-    //     final double width = size.height * imageRatio;
-    //     final double left = (size.width - width) / 2;
-    //     dstRect = Rect.fromLTWH(left, 0, width, size.height);
-    //   }
-    //
-    //   final srcRect = Rect.fromLTWH(
-    //     0,
-    //     0,
-    //     bgImage!.width.toDouble(),
-    //     bgImage!.height.toDouble(),
-    //   );
-    //
-    //   canvas.drawImageRect(bgImage!, srcRect, dstRect, Paint());
-    // }
 
     // Рисуем фоновое изображение с эффектом BoxFit.cover
     if (bgImage != null) {
@@ -626,49 +581,6 @@ class _Toolbar extends StatelessWidget {
             },
             child: SvgPicture.asset("assets/icon/ic_palette.svg"),
           )
-          // IconButton(
-          //   onPressed: () => onEraser(!isEraser),
-          //   icon: Icon(isEraser ? Icons.brush : Icons.cleaning_services),
-          // ),
-          // Expanded(
-          //   child: Slider(
-          //     value: thickness,
-          //     min: 1,
-          //     max: 24,
-          //     onChanged: onThickness,
-          //   ),
-          // ),
-          // GestureDetector(
-          //   onTap: () async {
-          //     final c = await showDialog<Color?>(
-          //       context: context,
-          //       builder: (_) => AlertDialog(
-          //         content: Wrap(
-          //           spacing: 8,
-          //           runSpacing: 8,
-          //           children: [
-          //             Colors.black,
-          //             Colors.white,
-          //             Colors.red,
-          //             Colors.green,
-          //             Colors.blue,
-          //             Colors.purple,
-          //             Colors.orange,
-          //           ]
-          //               .map(
-          //                 (c) => InkWell(
-          //               onTap: () => Navigator.pop(context, c),
-          //               child: CircleAvatar(backgroundColor: c),
-          //             ),
-          //           )
-          //               .toList(),
-          //         ),
-          //       ),
-          //     );
-          //     if (c != null) onColor(c);
-          //   },
-          //   child: CircleAvatar(radius: 12, backgroundColor: color),
-          // ),
         ],
       ),
     );
