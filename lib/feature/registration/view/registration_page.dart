@@ -15,12 +15,20 @@ class _RegistrationPage extends State<RegistrationPage> {
   final _password = TextEditingController();
   final _name = TextEditingController();
   final _passwordRepeat = TextEditingController();
-  bool _isFormValid = false; // Добавьте эту переменную
 
-  void _validateForm() {
-    setState(() {
-      _isFormValid = _formKey.currentState?.validate() ?? false;
-    });
+  // Отслеживаем, было ли поле в фокусе (пользователь взаимодействовал с ним)
+  bool _nameTouched = false;
+  bool _emailTouched = false;
+  bool _passwordTouched = false;
+  bool _passwordRepeatTouched = false;
+
+  // Для проверки валидности всей формы
+  bool get _isFormValid {
+    if (!_nameTouched || !_emailTouched || !_passwordTouched || !_passwordRepeatTouched) {
+      return false;
+    }
+
+    return _formKey.currentState?.validate() ?? false;
   }
 
   @override
@@ -89,7 +97,6 @@ class _RegistrationPage extends State<RegistrationPage> {
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                       child: Form(
                         key: _formKey,
-                        onChanged: _validateForm, // <- триггерим валидацию на каждом изменении
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -109,6 +116,12 @@ class _RegistrationPage extends State<RegistrationPage> {
                             _buildTextField(
                               controller: _name,
                               label: 'Введите ваше имя',
+                              isTouched: _nameTouched,
+                              onChanged: (value) {
+                                setState(() {
+                                  _nameTouched = true;
+                                });
+                              },
                               validator: (v) =>
                               v != null && v.isNotEmpty ? null : 'Имя не может быть пустым',
                             ),
@@ -118,6 +131,12 @@ class _RegistrationPage extends State<RegistrationPage> {
                               controller: _email,
                               label: 'Ваша электронная почта',
                               keyboardType: TextInputType.emailAddress,
+                              isTouched: _emailTouched,
+                              onChanged: (value) {
+                                setState(() {
+                                  _emailTouched = true;
+                                });
+                              },
                               validator: (v) =>
                               v != null && v.contains('@') ? null : 'Некорректная почта',
                             ),
@@ -127,6 +146,12 @@ class _RegistrationPage extends State<RegistrationPage> {
                               controller: _password,
                               label: 'Пароль',
                               obscure: true,
+                              isTouched: _passwordTouched,
+                              onChanged: (value) {
+                                setState(() {
+                                  _passwordTouched = true;
+                                });
+                              },
                               validator: (v) {
                                 if (v != _passwordRepeat.text) {
                                   return "Пароли не совпадают";
@@ -143,6 +168,12 @@ class _RegistrationPage extends State<RegistrationPage> {
                               controller: _passwordRepeat,
                               label: 'Подтверждение пароля',
                               obscure: true,
+                              isTouched: _passwordRepeatTouched,
+                              onChanged: (value) {
+                                setState(() {
+                                  _passwordRepeatTouched = true;
+                                });
+                              },
                               validator: (v) {
                                 if (v != _password.text) {
                                   return "Пароли не совпадают";
@@ -214,6 +245,8 @@ class _RegistrationPage extends State<RegistrationPage> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
+    required bool isTouched,
+    required Function(String?) onChanged,
     String? Function(String?)? validator,
     bool obscure = false,
     TextInputType? keyboardType,
@@ -236,8 +269,10 @@ class _RegistrationPage extends State<RegistrationPage> {
           border: InputBorder.none,
           filled: true,
           fillColor: Colors.transparent,
+          errorStyle: isTouched ? null : const TextStyle(height: 0),
         ),
-        validator: validator,
+        validator: isTouched ? validator : null,
+        onChanged: onChanged,
       ),
     );
   }
