@@ -93,7 +93,6 @@ class _RegistrationPage extends State<RegistrationPage> {
                   /// Скроллируемая форма
                   Center(
                     child: SingleChildScrollView(
-                      //keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                       child: Form(
                         key: _formKey,
